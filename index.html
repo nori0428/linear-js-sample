@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>linear-js sample</title>
+    <script type="text/javascript" src="./linear.min.js"></script>
+    <script type="text/javascript">
+      window.onload = function() {
+        var transport = {type: "websocket", host: "127.0.0.1", port: 37800};
+        var client = new linear.client({transports: [transport]});
+        client.onconnect = function(e) {
+          document.write(e.type + '<br>');
+          reqResp();
+        };
+        client.ondisconnect = function(e) {
+          document.write(e.type + '<br>');
+        };
+        client.onnotify = function(e) {
+                            document.write('recv notify: ');
+                            document.write('name: ' + e.name);
+                            document.write(', data: ' + JSON.stringify(e.data));
+                            document.write('<br>');
+                            client.disconnect();
+                          };
+        client.connect();
+
+        function reqResp() {
+          var m = "echo", p = "Hello linear";
+          var id = client.request({method: m, params: p,
+                                   onresponse: function(r) {
+                                                 document.write('recv response: id = ' + r.id + ', result or error: ');
+                                                 document.write(r.error || r.result);
+                                                 document.write('<br>');
+                                                 notif();
+                                               }
+                                  });
+          document.write('send request: id = ' + id +
+                         ', method: ' + m +
+                         ', params: ' + p + '<br>');
+        }
+        function notif() {
+          var n = 'from js client';
+          var d = [1234, 3.14, 'Client', [1], {'key': 1}, -1];
+          document.write('send notify: ');
+          document.write('name: ' + n);
+          document.write(', data: ' + JSON.stringify(d) + '<br>');
+          client.notify({'name': n, 'data': d});
+        }
+      };
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
